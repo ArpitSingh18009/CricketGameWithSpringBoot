@@ -22,4 +22,6 @@ public interface PlayerService {
     Optional<Player> getPlayerByJersyNo(int jersyNo);
 
     PlayerStats getPlayerStatsByJersyNo(int jersyNo);
+
+    Player getPlayerByName(String name);
 }

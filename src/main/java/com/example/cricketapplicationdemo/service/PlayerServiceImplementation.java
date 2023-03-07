@@ -100,4 +100,10 @@ public class PlayerServiceImplementation implements PlayerService {
         int playerId = playerRepository.findByJersyNo(jersyNo).get().getPlayerStatsId();
         return playerStatsRepository.findById(playerId).get();
     }
+
+    @Override
+    public Player getPlayerByName(String name) {
+        return playerRepository.findByName(name).orElseThrow(()->
+                new ResourceNotFound("Player with given name "+ name +" not found")) ;
+    }
 }

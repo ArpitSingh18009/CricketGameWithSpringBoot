@@ -36,6 +36,12 @@ public class PlayerController {
     {
         return playerService.getPlayerById(id);
     }
+
+    @GetMapping("/playerName/{name}")
+    public Player getPlayerByName(@PathVariable String name)
+    {
+        return playerService.getPlayerByName(name);
+    }
     @GetMapping("/teamPlayer/{id}")
     public List<Player> getAllPlayerOfTeam(@PathVariable int id)
     {
