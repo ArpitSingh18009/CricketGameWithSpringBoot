@@ -1,6 +1,7 @@
 package com.example.cricketapplicationdemo.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -12,6 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "BowlingStats")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @CompoundIndexes({@CompoundIndex(name ="date_playerId", def="{'date':1,'playerId':1}")})
@@ -30,13 +32,6 @@ public class BowlingStats {
     private int runConceded=0;
     private int ballsBowled=0;
     private int totalWicket=0;
-    private String noOfOvers;
-
-    String setNoofOvers(int ballsBowled)
-    {
-        //return toString(ballsBowled/6 + "." + ballsBowled % 6 );
-        return "arp";
-    }
     public void increaserunConcede(int run)
     {
         runConceded+=run;

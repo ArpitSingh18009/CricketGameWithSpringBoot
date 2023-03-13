@@ -1,23 +1,24 @@
 package com.example.cricketapplicationdemo.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
-import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "BattingStats")
+@Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @CompoundIndexes({@CompoundIndex(name ="date_playerId", def="{'date':1,'playerId':1}")})
 public class BattingStats {
-
+// todo : add a class having common data among others, and extend it to this and other classes
     @Transient
     public static final String SEQUENCE_NAME = "batiingStats_sequence";
     @Id
@@ -47,4 +48,5 @@ public class BattingStats {
         ballFaced++;
         strikeRate = runScored / ballFaced;
     }
+
 }

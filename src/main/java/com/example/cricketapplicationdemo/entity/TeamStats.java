@@ -9,7 +9,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "TeamStats")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class TeamStats {
     @Id
     private int id;

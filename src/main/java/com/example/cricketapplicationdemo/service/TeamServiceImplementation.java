@@ -33,6 +33,7 @@ public class TeamServiceImplementation implements TeamService {
         for(int i =0;i<11;i++)
         {
             int index = team.getPlayerIds().get(i);
+            // todo create bulk method for jNo. to id conversion
             Optional<Player> player = Optional.of(playerRepository.findByJersyNo(index)).orElseThrow(() ->
                     new ResourceNotFound("Player with given JersyNo " + index + " does not found" ));
 

@@ -39,7 +39,6 @@ public class MatchController {
     @GetMapping("/getMatch/{team1Name}/{team2Name}/{date}")
     public Match getMatchByTeamNameAndDate(@PathVariable String team1Name , @PathVariable String team2Name, @PathVariable String date)
     {
-
         return matchService.getMatchByTeamNameAndDate(team1Name,team2Name,date).get();
     }
 }

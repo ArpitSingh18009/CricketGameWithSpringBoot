@@ -4,9 +4,10 @@ import com.example.cricketapplicationdemo.entity.*;
 import com.example.cricketapplicationdemo.repository.TeamRepository;
 import com.example.cricketapplicationdemo.service.interfaces.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,14 +20,15 @@ public class PlayerController {
     @Autowired
     private TeamRepository teamRepository;
 
-    @PostMapping("/post")
-    public Player addPlayer(@Valid @RequestBody Player player) // checking validation is not done, getting error in doing so.
+
+    @PostMapping("/add")
+    public Player addPlayer(@Validated @RequestBody Player player) // checking validation is not done, getting error in doing so.
     {
         playerService.addPlayer(player);
         return player;
     }
 
-    @GetMapping("/allPlayer")
+    @GetMapping("/all")
     public List<Player> getAllPlayer()
     {
         return playerService.getAllPlayer();

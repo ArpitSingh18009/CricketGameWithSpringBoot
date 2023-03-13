@@ -46,7 +46,6 @@ public class TeamController {
 
         return teamService.findTeamStats(team.getTeamStatsId());
     }
-
     @PutMapping("/changeTeam/{name}/{position}/{jersyNo}")
     public String updateTeam(@PathVariable String name , @PathVariable int position, @PathVariable int jersyNo)
     {

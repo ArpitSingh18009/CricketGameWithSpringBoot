@@ -2,6 +2,7 @@ package com.example.cricketapplicationdemo.entity;
 
 import com.example.cricketapplicationdemo.helper.Ball;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @Document(collection = "Commentry")
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Commentry {
@@ -23,9 +25,7 @@ public class Commentry {
     private int id;
     private int matchId;
     private int teamId;
-    private List<Ball> results = new ArrayList<>();
+    private List<Ball> result;
 
-    public void addResult(Ball ball) {
-        results.add(ball);
-    }
+
 }

@@ -4,18 +4,18 @@ import com.example.cricketapplicationdemo.entity.*;
 import com.example.cricketapplicationdemo.exceptionHandler.ResourceNotFound;
 import com.example.cricketapplicationdemo.helper.Ball;
 import com.example.cricketapplicationdemo.repository.*;
-import com.example.cricketapplicationdemo.service.interfaces.MatchService;
+import com.example.cricketapplicationdemo.service.interfaces.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import static java.lang.Math.max;
+
 
 
 @Service
@@ -28,19 +28,20 @@ public class MatchServiceImplementation implements MatchService {
     @Autowired
     private TeamRepository teamRepository;
     @Autowired
-    private PlayerRepository playerRepository;
-    @Autowired
-    private BattingStatsRepository battingStatsRepository;
-    @Autowired
-    private BowlingStatsRepository bowlingStatsRepository;
-    @Autowired
-    private PlayerStatsRepository playerStatsRepository;
-    @Autowired
     private SequenceGeneratorService sequenceGeneratorService;
     @Autowired
     TeamStatsRepository teamStatsRepository;
     @Autowired
     private CommentryRepository commentryRepository;
+    @Autowired
+    private BattingStatsService battingStatsService;
+    @Autowired
+    private BowlingStatsService bowlingStatsService;
+    @Autowired
+    private ScoreboardService scoreboardService;
+    @Autowired
+    private CommentryService commentryService;
+
 
     private Match match;
     private ScoreBoard scoreBoard;
@@ -74,12 +75,36 @@ public class MatchServiceImplementation implements MatchService {
 
         startGame();
 
-        updateScorecard(scoreBoard);
+        updateBattingAndBowlingStats(scoreBoard);
         updateTeamStats(scoreBoard);
         scoreBoardRepository.save(scoreBoard);
         matchRepository.save(match);
         return scoreBoard;
     }
+    @Override
+    public Match getMatchBYDate(String date) {
+        Match match = Optional.of(matchRepository.findTopByDate(date)).orElseThrow(() ->
+                new ResourceNotFound("No match found on given date "));
+        return match;
+    }
+
+    @Override
+    public Optional<Match> getMatchByTeamName(String team1Name, String team2Name) {
+        return Optional.ofNullable(matchRepository.findTopByTeam1NameAndTeam2Name(team1Name, team2Name).orElseThrow(() ->
+                new ResourceNotFound("Match with this team not found")));
+    }
+
+    @Override
+    public Optional<Match> getMatchByTeamNameAndDate(String team1Name, String team2Name, String date) {
+        return Optional.of(matchRepository.findByTeam1NameAndTeam2NameAndDate(team1Name,team2Name,date)).orElseThrow(() ->
+                new ResourceNotFound("No match found on this " + date));
+    }
+
+    @Override
+    public List<Match> getAllMatchByDate(String date) {
+        return (List<Match>) matchRepository.findByDate(date);
+    }
+
 
     private void updateTeamStats(ScoreBoard scoreBoard) {
         Optional<TeamStats> teamStats = teamStatsRepository.findById(team1.getId());
@@ -110,35 +135,11 @@ public class MatchServiceImplementation implements MatchService {
         teamStatsRepository.save(teamStats.get());
     }
 
-    @Override
-    public Match getMatchBYDate(String date) {
-        Match match = Optional.of(matchRepository.findTopByDate(date)).orElseThrow(() ->
-                new ResourceNotFound("No match found on given date "));
-        return match;
-    }
-
-    @Override
-    public Optional<Match> getMatchByTeamName(String team1Name, String team2Name) {
-        return Optional.ofNullable(matchRepository.findTopByTeam1NameAndTeam2Name(team1Name, team2Name).orElseThrow(() ->
-                new ResourceNotFound("Match with this team not found")));
-    }
-
-    @Override
-    public Optional<Match> getMatchByTeamNameAndDate(String team1Name, String team2Name, String date) {
-        return Optional.of(matchRepository.findByTeam1NameAndTeam2NameAndDate(team1Name,team2Name,date)).orElseThrow(() ->
-                new ResourceNotFound("No match found on this " + date));
-    }
-
-    @Override
-    public List<Match> getAllMatchByDate(String date) {
-        return (List<Match>) matchRepository.findByDate(date);
-    }
 
     private String findDate() {
         Date currentDate = new Date();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         String dateString = formatter.format(currentDate);
-        //ystem.out.println("Current date as string: " + dateString);
         return dateString;
     }
 
@@ -160,12 +161,14 @@ public class MatchServiceImplementation implements MatchService {
 
         scoreBoard.setBattingTeamName(battingTeam.getName());
         int totalScore = startInning(battingTeam,bowlingTeam,1,10000);
-        int newScore = startInning(bowlingTeam,battingTeam,2,totalScore);
+        int secongInningScore = startInning(bowlingTeam,battingTeam,2,totalScore);
 
-        if(totalScore > newScore)
+        if(totalScore > secongInningScore)
             scoreBoard.setWinner(battingTeam.getName());
-        else
+        else if(secongInningScore > totalScore)
             scoreBoard.setWinner(bowlingTeam.getName());
+        else
+            scoreBoard.setWinner("Draw");
         return scoreBoard;
     }
 
@@ -178,26 +181,15 @@ public class MatchServiceImplementation implements MatchService {
     }
     public int startInning(Team team1,Team team2,int inningCount,int totalScore)
     {
-        List<Integer> battingList = team1.getPlayerIds();
-        List<Integer> bowlingList = team2.getPlayerIds();
 
-        int battingIndex = 0;
-        int total = 0;
-        int playerOnStrike = 0,playeOnNonStrike = 1;
-        int bowlingIndex = 6;
+        List<BattingStats> team1BattingStats = battingStatsService.initliaseBatting(team1.getPlayerIds(), match.getId(),date);
+        List<BowlingStats> team2BowlingStats = bowlingStatsService.initliaseBowling(team2.getPlayerIds(),match.getId() , date);
+        Commentry commentry = commentryService.initliaseCommentry(match.getId() , team1.getId());
 
-        List<BattingStats> team1BattingStats = initliaseBatting(battingList);
-        List<BowlingStats> team2BowlingStats = initliaseBowling(bowlingList);
-        Commentry commentry = new Commentry();
-        commentry.setMatchId(match.getId());
-        commentry.setTeamId(team1.getId());
-        commentry.setId(sequenceGeneratorService.generateSequence(commentry.SEQUENCE_NAME));
-
-        int noOfOvers = match.getNoOfOvers();
-        int wicket = 0;
+        int battingIndex = 0,playerOnStrike = 0,playeOnNonStrike = 1,bowlingIndex = 6,total = 0, wicket = 0;
         boolean flag = false;
 
-        for(int over = 0;over < noOfOvers;over++)
+        for(int over = 0;over < match.getNoOfOvers();over++)
         {
             for(int current = 0 ; current < 6; current++)
             {
@@ -206,17 +198,12 @@ public class MatchServiceImplementation implements MatchService {
                 int output = generateRunOnCurrentBall(battingIndex);
                 Ball ball = new Ball(over+1,current+1,team1BattingStats.get(playerOnStrike).getPlayerName(),
                         team2BowlingStats.get(bowlingIndex).getPlayerName(),output,1);
-                commentry.addResult(ball);
+                commentryService.addBall(commentry , ball);
                 if(output > 6)
                 {
                     playerOnStrike = max(playerOnStrike,playeOnNonStrike) + 1;
-                    wicket++;
-                    if(wicket>=10)
-                    {
-                        flag = true;
-                        break;
-                    }
                     team2BowlingStats.get(bowlingIndex).increaseTotalWicket();
+                    wicket++;
                 }
                 else
                 {
@@ -228,14 +215,13 @@ public class MatchServiceImplementation implements MatchService {
                         playerOnStrike = playeOnNonStrike;
                         playeOnNonStrike = temp;
                     }
-
                     totalScore -= output;
                     total+=output;
-                    if(totalScore < 0)
-                    {
-                        flag = true;
-                        break;
-                    }
+                }
+                if(wicket>=10 || totalScore <0)
+                {
+                    flag = true;
+                    break;
                 }
             }
             if(flag)
@@ -249,66 +235,12 @@ public class MatchServiceImplementation implements MatchService {
             if(bowlingIndex == 11)
                 bowlingIndex =6;
         }
-
-        if(inningCount == 1)
-        {
-            scoreBoard.setScoreOfFirstTeam(total);
-            scoreBoard.setWicketOfFirstTeam(wicket);
-            scoreBoard.setTeam1BattingStats(team1BattingStats);
-            scoreBoard.setTeam2BowlingStats(team2BowlingStats);
-        }
-        else
-        {
-            scoreBoard.setScoreOfSecondTeam(total);
-            scoreBoard.setWicketOfSecondTeam(wicket);
-            scoreBoard.setTeam2BattingStats(team1BattingStats);
-            scoreBoard.setTeam1BowlingStats(team2BowlingStats);
-        }
+        scoreboardService.updateScoreboard(scoreBoard , inningCount , total , wicket ,team1BattingStats , team2BowlingStats);
         commentryRepository.save(commentry);
         return total;
 
     }
-
-    private List<BowlingStats> initliaseBowling(List<Integer> bowlingList) {
-        List<BowlingStats> list = new ArrayList<>();
-        for(int i = 0 ;i<bowlingList.size();i++)
-        {
-            BowlingStats bowlingStats = new BowlingStats();
-            int index = bowlingList.get(i);
-
-            Optional<Player> player = playerRepository.findById(index);
-
-            bowlingStats.setId(sequenceGeneratorService.generateSequence(bowlingStats.SEQUENCE_NAME));
-            bowlingStats.setPlayerId(index);
-            bowlingStats.setMatchId(match.getId());
-            bowlingStats.setPlayerName(player.get().getName());
-            bowlingStats.setDate(date);
-            list.add(bowlingStats);
-        }
-        return list;
-    }
-
-    private List<BattingStats> initliaseBatting(List<Integer> battingList) {
-
-        List<BattingStats> list = new ArrayList<>();
-        for(int i = 0 ;i<battingList.size();i++)
-        {
-            BattingStats battingStats = new BattingStats();
-            int index = battingList.get(i);
-
-            Optional<Player> player = playerRepository.findById(index);
-
-            battingStats.setId(sequenceGeneratorService.generateSequence(battingStats.SEQUENCE_NAME));
-            battingStats.setPlayerId(index);
-            battingStats.setMatchId(match.getId());
-            battingStats.setPlayerName(player.get().getName());
-            battingStats.setDate(date);
-            list.add(battingStats);
-
-        }
-        return list;
-    }
-    public static int generateRunOnCurrentBall(int preindex)
+    public int generateRunOnCurrentBall(int preindex)
     {
 
         int[] batsmanScore = new int[]{0,0,6,2,2,4,2,6,2,7,4,6};
@@ -321,62 +253,8 @@ public class MatchServiceImplementation implements MatchService {
             return bowlerScore[index];
     }
 
-    private void updateScorecard(ScoreBoard scoreBoard) {
-
-        List<BattingStats> team1BattingStats = scoreBoard.getTeam1BattingStats();
-        List<BattingStats> team2BattingStats = scoreBoard.getTeam2BattingStats();
-        List<BowlingStats> team1BowlingStats = scoreBoard.getTeam1BowlingStats();
-        List<BowlingStats> team2BowlingStats = scoreBoard.getTeam2BowlingStats();
-
-        Optional<Player> player;
-        Optional<PlayerStats> playerStats;
-
-        for (int i = 0; i < team1BattingStats.size(); i++) {
-            BattingStats battingStats = team1BattingStats.get(i);
-            if (battingStats.getBallFaced() > 0) {
-                updateBattingStatsOfPlayer(battingStats);
-            }
-            battingStats = team2BattingStats.get(i);
-            if (battingStats.getBallFaced() > 0) {
-                updateBattingStatsOfPlayer(battingStats);
-            }
-
-            BowlingStats bowlingStats = team1BowlingStats.get(i);
-            if (bowlingStats.getBallsBowled() > 0) {
-                updateBowlingStatsOfPlayer(bowlingStats);
-            }
-
-            bowlingStats = team2BowlingStats.get(i);
-            if (bowlingStats.getBallsBowled() > 0) {
-                updateBowlingStatsOfPlayer(bowlingStats);
-            }
-        }
-    }
-    private void updateBattingStatsOfPlayer(BattingStats battingStats)
-    {
-        Optional<Player> player;
-        Optional<PlayerStats> playerStats;
-        player = playerRepository.findById(battingStats.getPlayerId());
-        playerRepository.save(player.get());
-
-        playerStats = playerStatsRepository.findById(battingStats.getPlayerId());
-        playerStats.get().updateStats(battingStats);
-        playerStatsRepository.save(playerStats.get());
-
-        battingStatsRepository.save(battingStats);
-    }
-    private void updateBowlingStatsOfPlayer(BowlingStats bowlingStats)
-    {
-        Optional<Player> player;
-        Optional<PlayerStats> playerStats;
-
-        player = playerRepository.findById(bowlingStats.getPlayerId());
-        playerRepository.save(player.get());
-
-        playerStats = playerStatsRepository.findById(bowlingStats.getPlayerId());
-        playerStats.get().updateBowlingStats(bowlingStats);
-        playerStatsRepository.save(playerStats.get());
-
-        bowlingStatsRepository.save(bowlingStats);
+    private void updateBattingAndBowlingStats(ScoreBoard scoreBoard) {
+        battingStatsService.updateStats(scoreBoard);
+        bowlingStatsService.updateStats(scoreBoard);
     }
 }
