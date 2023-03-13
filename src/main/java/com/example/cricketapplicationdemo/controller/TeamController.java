@@ -46,9 +46,11 @@ public class TeamController {
 
         return teamService.findTeamStats(team.getTeamStatsId());
     }
+    // Use dto and request body, convert it to post and give explanation.
     @PutMapping("/changeTeam/{name}/{position}/{jersyNo}")
     public String updateTeam(@PathVariable String name , @PathVariable int position, @PathVariable int jersyNo)
     {
+
         teamService.updateTeam(name, position, jersyNo);
         return  "Successfully Updated";
     }

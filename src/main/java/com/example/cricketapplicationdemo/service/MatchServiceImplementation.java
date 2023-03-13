@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -60,7 +61,7 @@ public class MatchServiceImplementation implements MatchService {
                 new ResourceNotFound("Team with teamId " + match.getTeam2Name() + " does not found")));
         Team teamTwo = team.get();
 
-        match.setId(sequenceGeneratorService.generateSequence(match.SEQUENCE_NAME));
+        match.setId(sequenceGeneratorService.generateSequence(match.SEQUENCE_NAME)); // id genrator:
 
         date = findDate();
         match.setDate(date);
@@ -108,28 +109,20 @@ public class MatchServiceImplementation implements MatchService {
 
     private void updateTeamStats(ScoreBoard scoreBoard) {
         Optional<TeamStats> teamStats = teamStatsRepository.findById(team1.getId());
-        System.out.println(teamStats.get().getTeamId());
-        if(scoreBoard.getWinner() == team1.getName())
-        {
-            teamStats.get().increaseNoOfMatchesPlayed();
+        teamStats.get().increaseNoOfMatchesPlayed();
+        if (scoreBoard.getWinner() == team1.getName()) {
             teamStats.get().increaseNoOfMatchesWin();
-        }
-        else
-        {
-            teamStats.get().increaseNoOfMatchesPlayed();
+        } else {
             teamStats.get().increaseNoOfMatchesLost();
         }
         teamStatsRepository.save(teamStats.get());
-        teamStats = teamStatsRepository.findById(team2.getId());
 
+        teamStats = teamStatsRepository.findById(team2.getId());
+        teamStats.get().increaseNoOfMatchesPlayed();
         if(scoreBoard.getWinner() == team2.getName())
         {
-            teamStats.get().increaseNoOfMatchesPlayed();
             teamStats.get().increaseNoOfMatchesWin();
-        }
-        else
-        {
-            teamStats.get().increaseNoOfMatchesPlayed();
+        } else {
             teamStats.get().increaseNoOfMatchesLost();
         }
         teamStatsRepository.save(teamStats.get());
@@ -152,7 +145,6 @@ public class MatchServiceImplementation implements MatchService {
         {
             battingTeam = team1;
             bowlingTeam = team2;
-
         }
         else{
             battingTeam =team2;
@@ -186,59 +178,61 @@ public class MatchServiceImplementation implements MatchService {
         List<BowlingStats> team2BowlingStats = bowlingStatsService.initliaseBowling(team2.getPlayerIds(),match.getId() , date);
         Commentry commentry = commentryService.initliaseCommentry(match.getId() , team1.getId());
 
-        int battingIndex = 0,playerOnStrike = 0,playeOnNonStrike = 1,bowlingIndex = 6,total = 0, wicket = 0;
+        int playerOnStrike = 0,playeOnNonStrike = 1,bowlingIndex = 6,total = 0, wicket = 0;
         boolean flag = false;
 
         for(int over = 0;over < match.getNoOfOvers();over++)
         {
             for(int current = 0 ; current < 6; current++)
             {
-                team1BattingStats.get(playerOnStrike).increseBallFaced();
-                team2BowlingStats.get(bowlingIndex).increaseBallBowled();
-                int output = generateRunOnCurrentBall(battingIndex);
-                Ball ball = new Ball(over+1,current+1,team1BattingStats.get(playerOnStrike).getPlayerName(),
-                        team2BowlingStats.get(bowlingIndex).getPlayerName(),output,1);
-                commentryService.addBall(commentry , ball);
-                if(output > 6)
-                {
-                    playerOnStrike = max(playerOnStrike,playeOnNonStrike) + 1;
-                    team2BowlingStats.get(bowlingIndex).increaseTotalWicket();
-                    wicket++;
-                }
-                else
-                {
-                    team1BattingStats.get(playerOnStrike).increaseRunScored(output);
-                    team2BowlingStats.get(bowlingIndex).increaserunConcede(output);
-                    if(output%2 ==1)
-                    {
-                        int temp=playerOnStrike;
-                        playerOnStrike = playeOnNonStrike;
-                        playeOnNonStrike = temp;
-                    }
-                    totalScore -= output;
-                    total+=output;
-                }
-                if(wicket>=10 || totalScore <0)
-                {
+                int[] list = ballOutput(playerOnStrike,playeOnNonStrike,total,wicket,over,current,team1BattingStats,team2BowlingStats,bowlingIndex,commentry);
+                playerOnStrike = list[0];
+                playeOnNonStrike = list[1];
+                total = list[2];
+                wicket = list[3];
+                if(wicket>=10 || totalScore < total){
                     flag = true;
                     break;
                 }
             }
             if(flag)
                 break;
-
-            int temp=playerOnStrike;
-            playerOnStrike = playeOnNonStrike;
-            playeOnNonStrike = temp;
-
-            bowlingIndex = (bowlingIndex + 1);
-            if(bowlingIndex == 11)
-                bowlingIndex =6;
+            bowlingIndex = (bowlingIndex + 1)== 11 ? 6 : bowlingIndex +1;
         }
         scoreboardService.updateScoreboard(scoreBoard , inningCount , total , wicket ,team1BattingStats , team2BowlingStats);
         commentryRepository.save(commentry);
         return total;
-
+    }
+    public int[] ballOutput(int playerOnStrike , int playerOnNonStrike , int total , int wicket, int over , int current
+                                    , List<BattingStats> team1BattingStats , List<BowlingStats> team2BowlingStats, int bowlingIndex, Commentry commentry)
+    {
+        team1BattingStats.get(playerOnStrike).increseBallFaced();
+        team2BowlingStats.get(bowlingIndex).increaseBallBowled();
+        int output = generateRunOnCurrentBall(playerOnStrike);
+        Ball ball = new Ball(over+1,current+1,team1BattingStats.get(playerOnStrike).getPlayerName(),
+                team2BowlingStats.get(bowlingIndex).getPlayerName(),output,1);
+        commentryService.addBall(commentry , ball);
+        if(output > 6)
+        {
+            playerOnStrike = max(playerOnStrike,playerOnNonStrike) + 1;
+            team2BowlingStats.get(bowlingIndex).increaseTotalWicket();
+            wicket++;
+        }
+        else
+        {
+            team1BattingStats.get(playerOnStrike).increaseRunScored(output);
+            team2BowlingStats.get(bowlingIndex).increaserunConcede(output);
+            if(output%2 ==1 )
+            {
+                int temp=playerOnStrike;
+                playerOnStrike = playerOnNonStrike;
+                playerOnNonStrike = temp;
+            }
+            total+=output;
+        }
+        if(current == 5)
+            return new int[]{playerOnNonStrike,playerOnStrike,total,wicket};
+        return new int[]{playerOnStrike, playerOnNonStrike,total,wicket};
     }
     public int generateRunOnCurrentBall(int preindex)
     {
