@@ -4,6 +4,7 @@ import com.example.cricketapplicationdemo.entity.*;
 import com.example.cricketapplicationdemo.entity.ScoreBoard;
 import com.example.cricketapplicationdemo.service.interfaces.MatchService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,7 +18,7 @@ public class MatchController {
     private MatchService matchService;
 
     @PostMapping("/startMatch")
-    public ScoreBoard startMatch(@RequestBody Match match)
+    public ScoreBoard startMatch(@Validated @RequestBody Match match)
     {
         return matchService.startMatch(match);
     }

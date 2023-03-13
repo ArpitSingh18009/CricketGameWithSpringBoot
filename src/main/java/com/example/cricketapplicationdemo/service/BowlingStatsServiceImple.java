@@ -6,6 +6,7 @@ import com.example.cricketapplicationdemo.repository.BowlingStatsRepository;
 import com.example.cricketapplicationdemo.repository.PlayerRepository;
 import com.example.cricketapplicationdemo.repository.PlayerStatsRepository;
 import com.example.cricketapplicationdemo.service.interfaces.BowlingStatsService;
+import com.example.cricketapplicationdemo.service.interfaces.PlayerStatsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,8 @@ public class BowlingStatsServiceImple implements BowlingStatsService {
     private SequenceGeneratorService sequenceGeneratorService;
     @Autowired
     private PlayerStatsRepository playerStatsRepository;
+    @Autowired
+    private PlayerStatsService playerStatsService;
 
     @Override
     public BowlingStats getBowlingStatsByJersyNoAndDate(int jersyNo, String date) {
@@ -87,9 +90,8 @@ public class BowlingStatsServiceImple implements BowlingStatsService {
         playerRepository.save(player.get());
 
         playerStats = playerStatsRepository.findById(bowlingStats.getPlayerId());
-        playerStats.get().updateBowlingStats(bowlingStats);
+        playerStatsService.updateBowlingStats(bowlingStats,playerStats.get());
         playerStatsRepository.save(playerStats.get());
-
         bowlingStatsRepository.save(bowlingStats);
     }
 }

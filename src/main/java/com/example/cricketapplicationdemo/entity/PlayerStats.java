@@ -1,5 +1,6 @@
 package com.example.cricketapplicationdemo.entity;
 
+import com.example.cricketapplicationdemo.service.interfaces.PlayerStatsService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,18 +30,4 @@ public class PlayerStats {
     private int totalWicketTaken=0;
     private int totalBallsBowled=0;
 
-    public void updateStats(BattingStats battingStats)
-    {
-        this.totalRunsScored +=battingStats.getRunScored();
-        this.totalBallsFaced +=battingStats.getBallFaced();
-        this.total4s += battingStats.getTotal4s();
-        this.total6s += battingStats.getTotal6s();
-        this.strikeRate = (double)(totalRunsScored/totalBallsFaced)*100;
-    }
-    public void updateBowlingStats(BowlingStats bowlingStats)
-    {
-        this.totalBallsBowled +=bowlingStats.getBallsBowled();
-        this.totalWicketTaken +=bowlingStats.getTotalWicket();
-
-    }
 }

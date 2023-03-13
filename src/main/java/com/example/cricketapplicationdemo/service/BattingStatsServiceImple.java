@@ -6,6 +6,7 @@ import com.example.cricketapplicationdemo.repository.BattingStatsRepository;
 import com.example.cricketapplicationdemo.repository.PlayerRepository;
 import com.example.cricketapplicationdemo.repository.PlayerStatsRepository;
 import com.example.cricketapplicationdemo.service.interfaces.BattingStatsService;
+import com.example.cricketapplicationdemo.service.interfaces.PlayerStatsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,8 @@ public class BattingStatsServiceImple implements BattingStatsService {
     private SequenceGeneratorService sequenceGeneratorService;
     @Autowired
     private PlayerStatsRepository playerStatsRepository;
+    @Autowired
+    private PlayerStatsService playerStatsService;
 
     @Override
     public BattingStats getBattingStatsByJersyNoAndDate(int jersyNo, String date) {
@@ -93,9 +96,9 @@ public class BattingStatsServiceImple implements BattingStatsService {
         playerRepository.save(player.get());
 
         playerStats = playerStatsRepository.findById(battingStats.getPlayerId());
-        playerStats.get().updateStats(battingStats);
-        playerStatsRepository.save(playerStats.get());
 
+        playerStatsService.updateStats(battingStats , playerStats.get());
+        playerStatsRepository.save(playerStats.get());
         battingStatsRepository.save(battingStats);
     }
 

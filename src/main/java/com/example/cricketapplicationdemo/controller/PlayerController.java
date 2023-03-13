@@ -4,7 +4,6 @@ import com.example.cricketapplicationdemo.entity.*;
 import com.example.cricketapplicationdemo.repository.TeamRepository;
 import com.example.cricketapplicationdemo.service.interfaces.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
