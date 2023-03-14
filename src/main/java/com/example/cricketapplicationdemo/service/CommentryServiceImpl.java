@@ -15,8 +15,6 @@ public class CommentryServiceImpl implements CommentryService {
     private CommentryRepository commentryRepository;
     @Autowired
     private SequenceGeneratorService sequenceGeneratorService;
-
-
     @Override
     public Commentry initliaseCommentry(int matchId, int teamId) {
         Commentry commentry = Commentry.builder()

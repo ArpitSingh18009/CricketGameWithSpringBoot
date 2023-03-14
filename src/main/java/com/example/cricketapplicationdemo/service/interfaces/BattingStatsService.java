@@ -12,7 +12,5 @@ public interface BattingStatsService {
 
     List<BattingStats> initliaseBatting(List<Integer> battingList, int id, String date);
 
-    void updateBattingStatsOfPlayer(BattingStats battingStats);
-
     void updateStats(ScoreBoard scoreBoard);
 }

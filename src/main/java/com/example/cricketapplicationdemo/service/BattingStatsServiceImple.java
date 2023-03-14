@@ -50,7 +50,10 @@ public class BattingStatsServiceImple implements BattingStatsService {
                  new ResourceNotFound("No battingStats found to given jersyNo"));
 
     }
-
+    /*
+          Initialising the BattingStats for each Player who is playing the inning and later store into the
+          database.
+     */
     public List<BattingStats> initliaseBatting(List<Integer> battingList , int matchId, String date) {
 
         List<BattingStats> list = new ArrayList<>();
@@ -71,8 +74,28 @@ public class BattingStatsServiceImple implements BattingStatsService {
         }
         return list;
     }
+    /*
+        Updating the BattingStats of player after each ball is played
+     */
+    void increaseRunScored(int run,BattingStats battingStats)
+    {
+        battingStats.setRunScored(battingStats.getRunScored() + run);
+        if(run == 4)
+            battingStats.setTotal4s(battingStats.getTotal4s() + 1);
+        else if(run == 6)
+            battingStats.setTotal6s(battingStats.getTotal6s() + 1);
+    }
+    /*
+        Updating the bowl faced by batsman after each ball.
+     */
+    void increseBallFaced(BattingStats battingStats)
+    {
+        battingStats.setBallFaced(battingStats.getBallFaced() + 1) ;
+    }
 
-
+    /*
+         Update the BattingStats of player after the match is completed
+     */
     public void updateStats(ScoreBoard scoreBoard)
     {
         for(BattingStats battingStats : scoreBoard.getTeam1BattingStats())
@@ -88,7 +111,12 @@ public class BattingStatsServiceImple implements BattingStatsService {
             }
         }
     }
-    public void updateBattingStatsOfPlayer(BattingStats battingStats)
+
+    /*
+         Make this function private because nobody from outside can use it
+         Only class can access it.
+     */
+    private void updateBattingStatsOfPlayer(BattingStats battingStats)
     {
         Optional<Player> player;
         Optional<PlayerStats> playerStats;

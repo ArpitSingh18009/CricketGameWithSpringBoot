@@ -18,20 +18,4 @@ public class TeamStats {
     private int noOfMatchesLost=0;
     private int noOfMatchesDraw=0;
 
-    public void increaseNoOfMatchesPlayed()
-    {
-        noOfmatchesPlayed++;
-    }
-    public void increaseNoOfMatchesWin()
-    {
-        noOfmatchesWon++;
-    }
-    public void increaseNoOfMatchesLost()
-    {
-        noOfMatchesLost++;
-    }
-    public void increaseNoOfMatchesDraw()
-    {
-        noOfMatchesDraw++;
-    }
 }

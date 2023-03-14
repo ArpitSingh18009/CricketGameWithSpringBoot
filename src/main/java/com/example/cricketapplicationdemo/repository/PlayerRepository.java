@@ -9,6 +9,5 @@ import java.util.Optional;
 @Repository
 public interface PlayerRepository extends MongoRepository<Player,Integer> {
     Optional<Player> findByJersyNo(int jersyNo);
-
     Optional<Player> findByName(String name);
 }

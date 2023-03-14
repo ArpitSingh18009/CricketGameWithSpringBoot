@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -30,8 +29,7 @@ public class MatchServiceImplementation implements MatchService {
     private TeamRepository teamRepository;
     @Autowired
     private SequenceGeneratorService sequenceGeneratorService;
-    @Autowired
-    TeamStatsRepository teamStatsRepository;
+
     @Autowired
     private CommentryRepository commentryRepository;
     @Autowired
@@ -39,9 +37,15 @@ public class MatchServiceImplementation implements MatchService {
     @Autowired
     private BowlingStatsService bowlingStatsService;
     @Autowired
+    private BattingStatsServiceImple battingStatsServiceImple;
+    @Autowired
+    private BowlingStatsServiceImple bowlingStatsServiceImple;
+    @Autowired
     private ScoreboardService scoreboardService;
     @Autowired
     private CommentryService commentryService;
+    @Autowired
+    private TeamStatsService teamStatsService;
 
 
     private Match match;
@@ -77,7 +81,7 @@ public class MatchServiceImplementation implements MatchService {
         startGame();
 
         updateBattingAndBowlingStats(scoreBoard);
-        updateTeamStats(scoreBoard);
+        teamStatsService.updateTeamStats(scoreBoard,team1,team2);
         scoreBoardRepository.save(scoreBoard);
         matchRepository.save(match);
         return scoreBoard;
@@ -106,29 +110,6 @@ public class MatchServiceImplementation implements MatchService {
         return (List<Match>) matchRepository.findByDate(date);
     }
 
-
-    private void updateTeamStats(ScoreBoard scoreBoard) {
-        Optional<TeamStats> teamStats = teamStatsRepository.findById(team1.getId());
-        teamStats.get().increaseNoOfMatchesPlayed();
-        if (scoreBoard.getWinner() == team1.getName()) {
-            teamStats.get().increaseNoOfMatchesWin();
-        } else {
-            teamStats.get().increaseNoOfMatchesLost();
-        }
-        teamStatsRepository.save(teamStats.get());
-
-        teamStats = teamStatsRepository.findById(team2.getId());
-        teamStats.get().increaseNoOfMatchesPlayed();
-        if(scoreBoard.getWinner() == team2.getName())
-        {
-            teamStats.get().increaseNoOfMatchesWin();
-        } else {
-            teamStats.get().increaseNoOfMatchesLost();
-        }
-        teamStatsRepository.save(teamStats.get());
-    }
-
-
     private String findDate() {
         Date currentDate = new Date();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -136,7 +117,7 @@ public class MatchServiceImplementation implements MatchService {
         return dateString;
     }
 
-    public ScoreBoard startGame()
+    private ScoreBoard startGame()
     {
         Team battingTeam;
         Team bowlingTeam;
@@ -164,16 +145,18 @@ public class MatchServiceImplementation implements MatchService {
         return scoreBoard;
     }
 
-    public String getToss(Team team1, Team team2) {
+    private String getToss(Team team1, Team team2) {
         double toss = (int) (Math.random() * 2);
         if (toss == 0) {
             return team1.getName();
         } else
             return team2.getName();
     }
-    public int startInning(Team team1,Team team2,int inningCount,int totalScore)
+    /*
+         Innings are played into this function
+     */
+    private int startInning(Team team1,Team team2,int inningCount,int totalScore)
     {
-
         List<BattingStats> team1BattingStats = battingStatsService.initliaseBatting(team1.getPlayerIds(), match.getId(),date);
         List<BowlingStats> team2BowlingStats = bowlingStatsService.initliaseBowling(team2.getPlayerIds(),match.getId() , date);
         Commentry commentry = commentryService.initliaseCommentry(match.getId() , team1.getId());
@@ -203,11 +186,14 @@ public class MatchServiceImplementation implements MatchService {
         commentryRepository.save(commentry);
         return total;
     }
-    public int[] ballOutput(int playerOnStrike , int playerOnNonStrike , int total , int wicket, int over , int current
+    /*
+        Getting the output on each ball and returning it back to function from where it is called.
+     */
+    private int[] ballOutput(int playerOnStrike , int playerOnNonStrike , int total , int wicket, int over , int current
                                     , List<BattingStats> team1BattingStats , List<BowlingStats> team2BowlingStats, int bowlingIndex, Commentry commentry)
     {
-        team1BattingStats.get(playerOnStrike).increseBallFaced();
-        team2BowlingStats.get(bowlingIndex).increaseBallBowled();
+        battingStatsServiceImple.increseBallFaced(team1BattingStats.get(playerOnStrike));
+        bowlingStatsServiceImple.increaseBallBowled(team2BowlingStats.get(bowlingIndex));
         int output = generateRunOnCurrentBall(playerOnStrike);
         Ball ball = new Ball(over+1,current+1,team1BattingStats.get(playerOnStrike).getPlayerName(),
                 team2BowlingStats.get(bowlingIndex).getPlayerName(),output,1);
@@ -215,13 +201,13 @@ public class MatchServiceImplementation implements MatchService {
         if(output > 6)
         {
             playerOnStrike = max(playerOnStrike,playerOnNonStrike) + 1;
-            team2BowlingStats.get(bowlingIndex).increaseTotalWicket();
+            bowlingStatsServiceImple.increaseTotalWicket(team2BowlingStats.get(bowlingIndex));
             wicket++;
         }
         else
         {
-            team1BattingStats.get(playerOnStrike).increaseRunScored(output);
-            team2BowlingStats.get(bowlingIndex).increaserunConcede(output);
+            battingStatsServiceImple.increaseRunScored(output,team1BattingStats.get(playerOnStrike));
+            bowlingStatsServiceImple.increaserunConcede(output,team2BowlingStats.get(bowlingIndex));
             if(output%2 ==1 )
             {
                 int temp=playerOnStrike;
@@ -234,7 +220,10 @@ public class MatchServiceImplementation implements MatchService {
             return new int[]{playerOnNonStrike,playerOnStrike,total,wicket};
         return new int[]{playerOnStrike, playerOnNonStrike,total,wicket};
     }
-    public int generateRunOnCurrentBall(int preindex)
+    /*
+        Generate the run on each ball.
+     */
+    private int generateRunOnCurrentBall(int preindex)
     {
 
         int[] batsmanScore = new int[]{0,0,6,2,2,4,2,6,2,7,4,6};
@@ -246,7 +235,9 @@ public class MatchServiceImplementation implements MatchService {
         else
             return bowlerScore[index];
     }
-
+    /*
+         Update the batting and bowling Stats after the match is completed
+     */
     private void updateBattingAndBowlingStats(ScoreBoard scoreBoard) {
         battingStatsService.updateStats(scoreBoard);
         bowlingStatsService.updateStats(scoreBoard);

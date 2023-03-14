@@ -32,16 +32,5 @@ public class BowlingStats {
     private int runConceded=0;
     private int ballsBowled=0;
     private int totalWicket=0;
-    public void increaserunConcede(int run)
-    {
-        runConceded+=run;
-    }
-    public void increaseTotalWicket()
-    {
-        totalWicket++;
-    }
-    public void increaseBallBowled()
-    {
-        ballsBowled++;
-    }
+
 }

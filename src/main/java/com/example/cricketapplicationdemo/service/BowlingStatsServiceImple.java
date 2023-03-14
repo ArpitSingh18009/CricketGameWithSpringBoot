@@ -47,6 +47,21 @@ public class BowlingStatsServiceImple implements BowlingStatsService {
         return bowlingStatsRepository.findAllByPlayerId(id).orElseThrow(() ->
                 new ResourceNotFound("No bowlingStats found for given jersyNo"));
     }
+    /*
+         These functions are updating the bowling stats of bowler
+     */
+    void increaserunConcede(int run, BowlingStats bowlingStats)
+    {
+        bowlingStats.setRunConceded(bowlingStats.getRunConceded() + run);
+    }
+    void increaseTotalWicket(BowlingStats bowlingStats)
+    {
+        bowlingStats.setTotalWicket(bowlingStats.getTotalWicket() + 1);
+    }
+    void increaseBallBowled(BowlingStats bowlingStats)
+    {
+        bowlingStats.setBallsBowled(bowlingStats.getBallsBowled() + 1);
+    }
     public List<BowlingStats> initliaseBowling(List<Integer> bowlingList,int matchId , String date) {
         List<BowlingStats> list = new ArrayList<>();
         for(int index : bowlingList)
@@ -66,6 +81,9 @@ public class BowlingStatsServiceImple implements BowlingStatsService {
         }
         return list;
     }
+    /*
+         Update the BowlingStats of player after the match is completed
+     */
     public void updateStats(ScoreBoard scoreBoard)
     {
         for(BowlingStats bowlingStats : scoreBoard.getTeam1BowlingStats())
@@ -81,7 +99,11 @@ public class BowlingStatsServiceImple implements BowlingStatsService {
             }
         }
     }
-    public void updateBowlingStatsOfPlayer(BowlingStats bowlingStats)
+    /*
+         Make this function private because nobody from outside can use it
+         Only class can access it.
+     */
+    private void updateBowlingStatsOfPlayer(BowlingStats bowlingStats)
     {
         Optional<Player> player;
         Optional<PlayerStats> playerStats;

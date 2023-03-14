@@ -18,7 +18,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @CompoundIndexes({@CompoundIndex(name ="date_playerId", def="{'date':1,'playerId':1}")})
 public class BattingStats {
-// todo : add a class having common data among others, and extend it to this and other classes
+
     @Transient
     public static final String SEQUENCE_NAME = "batiingStats_sequence";
     @Id
@@ -34,19 +34,5 @@ public class BattingStats {
     private double strikeRate=0.0;
     private int total4s=0;
     private int total6s=0;
-
-    public void increaseRunScored(int run)
-    {
-        runScored+=run;
-        if(run == 4)
-            total4s++;
-        else if(run == 6)
-            total6s++;
-    }
-    public void increseBallFaced()
-    {
-        ballFaced++;
-        strikeRate = runScored / ballFaced;
-    }
 
 }

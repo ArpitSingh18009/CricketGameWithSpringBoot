@@ -12,7 +12,5 @@ public interface BowlingStatsService {
 
     List<BowlingStats> initliaseBowling(List<Integer> bowlingList, int id, String date);
 
-    void updateBowlingStatsOfPlayer(BowlingStats bowlingStats);
-
     void updateStats(ScoreBoard scoreBoard);
 }
