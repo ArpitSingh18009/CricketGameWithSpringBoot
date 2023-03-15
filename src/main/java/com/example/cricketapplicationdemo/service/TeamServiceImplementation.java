@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -30,10 +31,8 @@ public class TeamServiceImplementation implements TeamService {
     public void addTeam(Team team) {
 
         List<Integer> ids = new ArrayList<>();
-        for(int i =0;i<11;i++)
+        for(int index : team.getPlayerIds())
         {
-            int index = team.getPlayerIds().get(i);
-            // todo create bulk method for jNo. to id conversion
             Optional<Player> player = Optional.of(playerRepository.findByJersyNo(index)).orElseThrow(() ->
                     new ResourceNotFound("Player with given JersyNo " + index + " does not found" ));
 
@@ -75,9 +74,9 @@ public class TeamServiceImplementation implements TeamService {
                 new ResourceNotFound("Player with given jersyNo does not found")));
 
         int id = player.getId();
-        for(int i=0;i<11;i++)
+        for(int index : team.getPlayerIds())
         {
-            if(team.getPlayerIds().get(i) == id)
+            if(Objects.equals(index ,id))
                 throw new ResourceNotFound("Player with given jersyNo already exist in team");
         }
         team.getPlayerIds().add((int)position-1,id);

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -62,7 +63,7 @@ public class PlayerServiceImplementation implements PlayerService {
         Optional<Player> optionalPlayer = Optional.of(playerRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFound("Player with this playerId " + id + " does not exist" )));
 
-        if(player.getName() != null)
+        if(Objects.nonNull(player.getName()))
             optionalPlayer.get().setName(player.getName());
 
         playerRepository.save(optionalPlayer.get());
@@ -82,9 +83,9 @@ public class PlayerServiceImplementation implements PlayerService {
         List<Integer> list = teamRepository.findById(id).get().getPlayerIds();
 
         List<Player> playersList= new ArrayList<>();
-        for(int i = 0; i<11 ; i++)
+        for(int index : list)
         {
-            playersList.add(playerRepository.findById(list.get(i)).get());
+            playersList.add(playerRepository.findById(index).get());
         }
 
         return playersList;

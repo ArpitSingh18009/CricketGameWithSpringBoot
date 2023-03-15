@@ -8,6 +8,7 @@ import com.example.cricketapplicationdemo.service.interfaces.TeamStatsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -18,7 +19,7 @@ public class TeamStatsServiceImplementation implements TeamStatsService {
     public void updateTeamStats(ScoreBoard scoreBoard , Team team1, Team team2) {
         Optional<TeamStats> teamStats = teamStatsRepository.findById(team1.getId());
         increaseNoOfMatchesPlayed(teamStats.get());
-        if (scoreBoard.getWinner() == team1.getName()) {
+        if (Objects.equals(scoreBoard.getWinner() , team1.getName())) {
             increaseNoOfMatchesWin(teamStats.get());
         } else {
             increaseNoOfMatchesLost(teamStats.get());
@@ -27,7 +28,7 @@ public class TeamStatsServiceImplementation implements TeamStatsService {
 
         teamStats = teamStatsRepository.findById(team2.getId());
         increaseNoOfMatchesPlayed(teamStats.get());
-        if(scoreBoard.getWinner() == team2.getName())
+        if(Objects.equals(scoreBoard.getWinner() ,team2.getName()))
         {
             increaseNoOfMatchesWin(teamStats.get());
         } else {

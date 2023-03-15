@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.lang.Math.max;
@@ -122,7 +123,7 @@ public class MatchServiceImplementation implements MatchService {
         Team battingTeam;
         Team bowlingTeam;
         String result = getToss(team1,team2);
-        if(result == team1.getName())
+        if(Objects.equals(result,team1.getName()))
         {
             battingTeam = team1;
             bowlingTeam = team2;
@@ -147,7 +148,7 @@ public class MatchServiceImplementation implements MatchService {
 
     private String getToss(Team team1, Team team2) {
         double toss = (int) (Math.random() * 2);
-        if (toss == 0) {
+        if (Objects.equals(toss,0)) {
             return team1.getName();
         } else
             return team2.getName();
@@ -236,7 +237,7 @@ public class MatchServiceImplementation implements MatchService {
             return bowlerScore[index];
     }
     /*
-         Update the batting and bowling Stats after the match is completed
+        Update the batting and bowling Stats after the match is completed
      */
     private void updateBattingAndBowlingStats(ScoreBoard scoreBoard) {
         battingStatsService.updateStats(scoreBoard);
